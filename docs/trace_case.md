@@ -14,14 +14,14 @@ Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_over
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Trial | `seeded_regression C-002@11`, run ID `E-seeded_regression-20261117-cab0` (report `reports/eval_seeded_regression.json`) |
+| Triệu chứng | `pass_rate` fail (lab8 grader: `status resolved != denied`); reply nói "LogiX đã hoàn 20.000đ cho đơn O-202" trong khi label yêu cầu `refund_vnd=0`, `status=denied` |
+| Bước sai đầu tiên | **Event 3 — `model_override` `{"delay_days": 5}`**: agent ghi đè `delay_days=2` (DB, O-202) bằng số 5 lấy từ chữ trong ticket |
+| Vì sao là bước *đầu tiên* | Event 1 (handoff) và 2 (investigator) trả order đúng `delay_days=2`; mọi sai lệch phía sau là hậu quả: event 4 quote `SHIP-LATE-03` 20.000đ là của delay=5, event 6 reply báo 20.000đ, ledger ghi 1 refund 20.000đ thay vì 0 |
+| Failure mode | **FM-03 ticket_trust** (docs/failure_taxonomy.md); hệ quả chạm thêm FM-08 (reply nói số ledger không được phép có) |
+| Đối chứng | `fixed C-002@11`: bỏ qua event override — đi thẳng từ investigator (delay=2) sang quote `reason=no_entitlement, amount 0` rồi reply từ chối; ledger 0/0, status `denied` |
+| Regression test | `tests/test_lab9_graders.py` — `DbFactKept` bắt event `model_override` (metric `db_fact_kept`, ngưỡng 0.95); trên variant lỗi metric rơi còn 0.9286, trên `fixed` = 1.0; `TrialPass`/`pass_rate` chặn đầu ra |
+| Chưa chắc chắn | Trace không chứng minh *tại sao* agent tin ticket (câu prompt MockLLM là replay cố định); chỉ chứng minh *bước nào* sai — nguyên nhân nằm ở logic shape, không phải ở seed |
 
 ## Quy tắc
 
