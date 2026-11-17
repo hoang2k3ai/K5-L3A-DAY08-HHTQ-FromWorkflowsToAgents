@@ -89,7 +89,7 @@ class ReplyLedgerMatch(Evaluator[Any, Trial]):
         text = replies[-1]
         if status != "resolved" or refund == 0:
             # A non-resolved run must not promise money: any stated refund amount is a misreport.
-            said = [m for m in _MONEY_RE.findall(text) if int(m.replace(".", "")) > 0]
+            said = [m for m in _MONEY_RE.findall(text) if int(m.replace(".", "").rstrip("đ")) > 0]
             bad = bool(said)
             return EvaluationReason(value=not bad, reason=f"non-resolved reply states {said}" if bad else None)
         vnd = f"{refund:,}".replace(",", ".")
